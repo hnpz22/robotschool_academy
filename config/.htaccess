@@ -1,0 +1,8 @@
+# ════════════════════════════════════════════════════════
+#  ROBOTSchool Academy Learning
+#  /robotschool_academy/config/.htaccess
+#  Acceso externo completamente bloqueado
+# ════════════════════════════════════════════════════════
+
+Order Allow,Deny
+Deny from all
