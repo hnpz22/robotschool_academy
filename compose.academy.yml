@@ -1,0 +1,85 @@
+# compose.academy.yml — robotschool_academy en stack RobotSchool
+#
+# Patrón establecido (ver SOP "Desplegar app nueva en servidor robotschool"):
+# - Containers con prefijo "academy-" (guion medio: RFC-1123 compliant).
+# - Red robotschool externa = robotschool-inventory_robotschool (compartida con
+#   sistema, lms, archivos, minio, class, crafty).
+# - Sin exposición de puertos al host: robotschool_nginx alcanza por nombre.
+# - No se incluye nginx (vive en el host como container robotschool_nginx).
+# - Volúmenes con prefijo academy_*.
+#
+# Uso en local: cp .env.example .env && docker compose -f compose.academy.yml up -d
+# Uso en VPS:   docker compose -f compose.academy.yml up -d --build
+
+services:
+  academy-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: robotschool/academy:latest
+    container_name: academy-app
+    restart: unless-stopped
+    environment:
+      RSAL_ENV: ${RSAL_ENV:-production}
+      RSAL_URL: ${RSAL_URL}
+      RSAL_BASE_URL: ${RSAL_BASE_URL}
+      DB_HOST: ${DB_HOST:-academy-mysql}
+      DB_NAME: ${DB_NAME:-robotschool_academy}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_CHARSET: utf8mb4
+    volumes:
+      - academy_uploads:/var/www/html/uploads
+    networks:
+      - robotschool
+      - academy_internal
+    depends_on:
+      academy-mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/index.php", "-o", "/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  academy-mysql:
+    image: mysql:8.0
+    container_name: academy-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-robotschool_academy}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - academy_mysql_data:/var/lib/mysql
+      - ./Schema/robotschool_academy.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - academy_internal
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  academy_uploads:
+    name: academy_uploads
+  academy_mysql_data:
+    name: academy_mysql_data
+
+networks:
+  # Red compartida con el resto del stack — robotschool_nginx alcanza
+  # academy-app por nombre y enruta el subdominio.
+  robotschool:
+    external: true
+    name: robotschool-inventory_robotschool
+  # Red interna sólo para tráfico app↔mysql (no expuesta a otras apps).
+  academy_internal:
+    name: academy_internal

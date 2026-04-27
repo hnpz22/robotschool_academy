@@ -1,0 +1,38 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Backups locales — no van a la imagen
+Bk0504/
+Bk0504ultimo/
+robotschool_academy_BAK/
+*_BAK/
+*.bak
+
+# Datos runtime — se montan como volumen
+uploads/*
+!uploads/.gitkeep
+
+# Notas de deploy históricas — no necesarias en runtime
+DEPLOY_*.md
+LEEME.txt
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs
+*.log
+error_log
+access_log
+
+# CI / Docker meta
+docker-compose*.yml
+compose*.yml
+Dockerfile*
+.dockerignore
