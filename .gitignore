@@ -18,6 +18,7 @@ robotschool_academy_BAK/
 # ── Datos runtime ─────────────────────
 uploads/*
 !uploads/.gitkeep
+!uploads/.htaccess
 
 # ── Secretos / config local ───────────
 .env

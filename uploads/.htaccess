@@ -1,0 +1,19 @@
+# ════════════════════════════════════════════════════════
+#  ROBOTSchool Academy Learning
+#  /robotschool_academy/uploads/.htaccess
+#  Bloquea ejecución de PHP en carpeta de subidas
+# ════════════════════════════════════════════════════════
+
+# Denegar ejecución de cualquier script
+Options -ExecCGI
+RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phar
+RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .phar
+
+# Solo permitir imágenes y PDF
+<FilesMatch "(?i)\.(php|php3|php4|php5|php7|php8|phtml|phar|pl|py|cgi|sh|bash|exe|jsp|asp|aspx)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# No listar contenido del directorio
+Options -Indexes
